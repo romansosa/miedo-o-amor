@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Termómetro · ¿Miedo o amor?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  body{overflow:hidden}
+  .screen{position:fixed;inset:0;display:none;padding:4.5vh 5vw}
+  .screen.on{display:flex}
+  .tools{position:fixed;top:3vh;right:3vw;display:flex;gap:8px;z-index:5}
+  .icon{height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);color:var(--soft);font-size:14px;font-weight:700;background:var(--paper)}
+  .icon:hover{border-color:var(--ink);color:var(--ink)}
+
+  /* Votación abierta */
+  #open{align-items:center;gap:6vw}
+  #open .left{flex:1}
+  #open h1{font-size:clamp(44px,min(7.5vw,13vh),130px);line-height:.92;font-weight:800;letter-spacing:-.02em;margin:.25em 0 .3em}
+  #open h1 em{font-style:italic;font-weight:400}
+  .scan{font-size:clamp(18px,2.2vw,32px);color:var(--soft);line-height:1.3;max-width:24ch}
+  .scan b{color:var(--ink)}
+  .url{margin-top:2.5vh;font-weight:700;font-size:clamp(14px,1.5vw,20px);color:var(--ink);word-break:break-all}
+  .live{margin-top:5vh;display:flex;align-items:baseline;gap:.4em}
+  .live .n{font-family:"Fraunces",serif;font-weight:800;font-size:clamp(60px,min(9vw,15vh),150px);line-height:.9;color:var(--amor);font-variant-numeric:tabular-nums}
+  .live .t{font-size:clamp(16px,1.8vw,26px);color:var(--soft);font-weight:600}
+  .qrcard{background:#fff;border-radius:28px;padding:3vh;box-shadow:0 10px 40px rgba(30,34,44,.08)}
+  #qr img,#qr canvas{display:block;width:min(38vw,70vh)!important;height:min(38vw,70vh)!important}
+  .pulse{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--amor);margin-right:10px;animation:p 1.6s infinite}
+  @keyframes p{0%{box-shadow:0 0 0 0 rgba(185,65,47,.5)}100%{box-shadow:0 0 0 16px rgba(185,65,47,0)}}
+
+  /* Termómetro */
+  #thermo{gap:4vw;align-items:stretch}
+  .tcol{display:flex;align-items:stretch;gap:1.4vw;padding:1vh 0}
+  .scale{display:flex;flex-direction:column;justify-content:space-between;text-align:right;padding:2vh 0 calc(min(13vh,9vw) + 1vh)}
+  .scale b{font-family:"Fraunces",serif;font-size:clamp(22px,2.6vw,40px);font-weight:800;line-height:1}
+  .scale .a{color:var(--amor)} .scale .m{color:var(--miedo)}
+  .scale small{display:block;font-size:13px;color:var(--soft);font-weight:600;margin-top:4px}
+  .thermo{position:relative;width:min(13vh,9vw);display:flex;flex-direction:column;align-items:center}
+  .tube{position:relative;flex:1;width:46%;background:#fff;border-radius:999px 999px 0 0;overflow:hidden;box-shadow:inset 0 0 0 3px var(--line)}
+  .fill{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(to top,var(--miedo),#8a5a63 45%,var(--amor));transition:height 1.4s cubic-bezier(.2,.8,.2,1)}
+  .mid{position:absolute;left:-30%;right:-30%;top:50%;border-top:2px dashed var(--line);z-index:2}
+  .bulb{width:100%;aspect-ratio:1;border-radius:50%;margin-top:-8%;background:var(--miedo);box-shadow:inset 0 0 0 3px var(--line);transition:background 1s}
+  .ticks{position:absolute;right:-26%;top:0;bottom:calc(min(13vh,9vw) * .92);display:flex;flex-direction:column;justify-content:space-between;font-size:12px;color:var(--soft);font-weight:700}
+
+  .info{flex:1;display:flex;flex-direction:column;justify-content:center;min-width:0;padding-right:120px}
+  .pre{font-size:clamp(17px,2vw,28px);color:var(--soft)}
+  #winner{font-size:clamp(64px,min(10vw,17vh),170px);font-weight:800;line-height:.9;letter-spacing:-.02em;margin:.08em 0 .1em}
+  #pct{font-size:clamp(18px,2.2vw,32px);font-weight:700}
+  .meta{display:flex;gap:2.5vw;margin-top:3vh;flex-wrap:wrap;align-items:flex-start}
+  #heavy{border-left:4px solid var(--miedo);padding:.2em 0 .2em .9em;max-width:30ch;font-size:clamp(15px,1.6vw,22px);line-height:1.3}
+  #heavy b{font-family:"Fraunces",serif}
+  .people{font-size:clamp(15px,1.6vw,22px);color:var(--soft);font-weight:600}
+  .people b{font-family:"Fraunces",serif;color:var(--ink);font-size:1.4em}
+  .list{display:grid;grid-template-columns:1fr 1fr;gap:1.4vh 2.4vw;margin-top:4vh}
+  .item .t{font-size:clamp(12px,1.15vw,16px);font-weight:600;margin-bottom:4px;display:flex;justify-content:space-between;gap:1em}
+  .item .t small{color:var(--soft);white-space:nowrap}
+  .bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--line)}
+  .bar span{height:100%;transition:width 1s}
+  .miniqr{position:fixed;right:3vw;bottom:3vh;background:#fff;padding:8px;border-radius:12px;box-shadow:0 6px 20px rgba(30,34,44,.08);text-align:center;font-size:11px;font-weight:700;color:var(--soft)}
+  #qr2 img,#qr2 canvas{width:84px!important;height:84px!important;display:block;margin-bottom:4px}
+  .status{position:fixed;left:5vw;bottom:2.5vh;font-size:12px;color:var(--soft)}
+</style>
+</head>
+<body>
+<div class="tools">
+  <button class="icon" id="toggle">Mostrar termómetro</button>
+  <button class="icon" id="fs">⤢</button>
+</div>
+
+<section class="screen on" id="open">
+  <div class="left">
+    <span class="kicker">Noche de hogar · Instituto</span>
+    <h1 class="serif">¿Por qué<br><em>lo hago?</em></h1>
+    <p class="scan">Escanea el código con la cámara de tu celular. <b>Sin descargar nada, sin registro y anónimo.</b></p>
+    <p class="url" id="url"></p>
+    <div class="live"><span class="pulse"></span><span class="n" id="nOpen">0</span><span class="t" id="tOpen">personas han votado</span></div>
+  </div>
+  <div class="qrcard"><div id="qr"></div></div>
+</section>
+
+<section class="screen" id="thermo">
+  <div class="tcol">
+    <div class="scale">
+      <div><b class="a">Amor</b><small>cálido</small></div>
+      <div><b class="m">Miedo</b><small>frío</small></div>
+    </div>
+    <div class="thermo">
+      <div class="tube"><div class="fill" id="fill"></div><div class="mid"></div></div>
+      <div class="bulb" id="bulb"></div>
+      <div class="ticks"><span>100</span><span>50</span><span>0</span></div>
+    </div>
+  </div>
+  <div class="info">
+    <span class="kicker">El termómetro del grupo</span>
+    <p class="pre" id="pre">La mayoría lo hace por…</p>
+    <h2 class="serif" id="winner">—</h2>
+    <p id="pct"></p>
+    <div class="meta">
+      <p class="people"><b id="nPeople">0</b> personas votaron</p>
+      <p id="heavy"></p>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+  <div class="miniqr"><div id="qr2"></div>¿Faltas tú?</div>
+</section>
+<p class="status" id="status"></p>
+
+<script src="config.js"></script>
+<script>
+const S = NH.situaciones, N = S.length;
+const $ = id => document.getElementById(id);
+const base = location.href.split(/[?#]/)[0].replace(/[^/]*$/, "");
+const voteUrl = base + (NH.ronda !== "principal" ? "?ronda=" + encodeURIComponent(NH.ronda) : "");
+$("url").textContent = voteUrl.replace(/^https?:\/\//, "");
+
+function makeQR(el, size){
+  try{ new QRCode(el, { text: voteUrl, width: size, height: size, colorDark: "#1e222c", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M }); }
+  catch(e){ el.textContent = voteUrl; }
+}
+makeQR($("qr"), 600); makeQR($("qr2"), 200);
+
+let mode = "open";
+$("toggle").onclick = ()=>{
+  mode = mode === "open" ? "thermo" : "open";
+  document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on", s.id===mode));
+  $("toggle").textContent = mode === "open" ? "Mostrar termómetro" : "Volver al QR";
+  if (mode === "thermo") { $("fill").style.height = "0%"; setTimeout(()=>paint(last, true), 60); }
+};
+$("fs").onclick = ()=>{ try{ document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }catch(e){} };
+
+let last = { rows: [], votantes: 0 };
+
+async function load(){
+  try{
+    const r = await fetch(NH.url + "/rest/v1/rpc/nh_resultados", {
+      method:"POST",
+      headers:{ "apikey": NH.key, "Content-Type":"application/json" },
+      body: JSON.stringify({ p_ronda: NH.ronda })
+    });
+    if(!r.ok) throw new Error(r.status);
+    const rows = await r.json();
+    last = { rows, votantes: rows.length ? Number(rows[0].votantes) : 0 };
+    paint(last);
+    $("status").textContent = "";
+  }catch(e){
+    $("status").textContent = "Sin conexión, reintentando…";
+  }
+}
+
+function paint(d){
+  const V = d.votantes;
+  $("nOpen").textContent = V;
+  $("tOpen").textContent = V === 1 ? "persona ha votado" : "personas han votado";
+  $("nPeople").textContent = V;
+
+  const by = S.map((_,k)=>{ const r = d.rows.find(x=>Number(x.situacion)===k); return { m: r?Number(r.miedo):0, a: r?Number(r.amor):0 }; });
+  let M=0, A=0; by.forEach(v=>{M+=v.m; A+=v.a;});
+  const T = M + A, pa = T ? A/T*100 : 0, pm = T ? M/T*100 : 0;
+
+  if (mode === "thermo") $("fill").style.height = (T ? pa : 0) + "%";
+  $("bulb").style.background = T && pa >= 50 ? "var(--amor)" : "var(--miedo)";
+
+  const w = $("winner");
+  if (!T){ $("pre").textContent = "Esperando votos…"; w.textContent = "—"; w.style.color = "var(--ink)"; $("pct").textContent = ""; }
+  else if (A === M){ $("pre").textContent = "El grupo quedó parejo entre"; w.innerHTML = "Miedo <span style='font-weight:400;font-style:italic'>y</span> amor"; w.style.color = "var(--ink)"; $("pct").textContent = "50% · 50%"; }
+  else if (A > M){ $("pre").textContent = "La mayoría lo hace por…"; w.textContent = "Amor"; w.style.color = "var(--amor)"; $("pct").innerHTML = `<span style="color:var(--amor)">${Math.round(pa)}% amor</span> · <span style="color:var(--miedo)">${Math.round(pm)}% miedo</span>`; }
+  else { $("pre").textContent = "La mayoría lo hace por…"; w.textContent = "Miedo"; w.style.color = "var(--miedo)"; $("pct").innerHTML = `<span style="color:var(--miedo)">${Math.round(pm)}% miedo</span> · <span style="color:var(--amor)">${Math.round(pa)}% amor</span>`; }
+
+  let hi = -1, hr = -1;
+  by.forEach((v,k)=>{ const t=v.m+v.a; if(t && v.m){ const r=v.m/t; if(r>hr || (r===hr && v.m>by[hi].m)){ hr=r; hi=k; } } });
+  $("heavy").innerHTML = hi >= 0 ? `Donde más pesa el miedo:<br><b>${S[hi]}</b>` : "";
+  $("heavy").style.display = hi >= 0 ? "block" : "none";
+
+  $("list").innerHTML = S.map((s,k)=>{
+    const v = by[k], t = v.m + v.a;
+    return `<div class="item"><div class="t"><span>${s}</span><small><span style="color:var(--miedo)">${v.m}</span> · <span style="color:var(--amor)">${v.a}</span></small></div>
+      <div class="bar"><span style="width:${t?v.m/t*100:0}%;background:var(--miedo)"></span><span style="width:${t?v.a/t*100:0}%;background:var(--amor)"></span></div></div>`;
+  }).join("");
+}
+
+load(); setInterval(load, 3000);
+</script>
+</body>
+</html>

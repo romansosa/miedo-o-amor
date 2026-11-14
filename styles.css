@@ -1,0 +1,15 @@
+:root{
+  --paper:#f3ede2; --ink:#1e222c; --soft:#6b6558; --line:#d6ccb9;
+  --amor:#b9412f; --amor-bg:#f6dcd3;
+  --miedo:#4f6176; --miedo-bg:#dbe2ea;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:"Source Sans 3",system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+.serif{font-family:"Fraunces",Georgia,serif}
+.kicker{letter-spacing:.18em;text-transform:uppercase;font-weight:700;font-size:12px;color:var(--soft)}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.btn{padding:.9em 1.6em;border-radius:999px;font-weight:700;font-size:17px;border:2px solid var(--ink)}
+.btn.solid{background:var(--ink);color:var(--paper)}
+.btn.ghost{border-color:var(--line);color:var(--soft)}
+.btn:disabled{opacity:.4}

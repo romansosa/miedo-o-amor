@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f3ede2">
+<title>¿Por qué lo hago? · Vota</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wrap{min-height:100dvh;display:flex;flex-direction:column;padding:calc(22px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));max-width:560px;margin:0 auto}
+  .view{display:none;flex:1;flex-direction:column}
+  .view.on{display:flex}
+  h1{font-size:54px;line-height:.92;font-weight:800;letter-spacing:-.02em;margin:18px 0 14px}
+  h1 em{font-style:italic;font-weight:400}
+  .lead{font-size:18px;line-height:1.45;color:var(--soft)}
+  .lead b{color:var(--ink)}
+  .steps{margin:26px 0;display:flex;flex-direction:column;gap:14px}
+  .steps div{display:flex;gap:14px;align-items:flex-start;font-size:16px;line-height:1.4}
+  .steps span{font-family:"Fraunces",serif;font-weight:800;font-size:22px;min-width:22px}
+  .anon{display:flex;gap:10px;align-items:center;background:#fbf8f2;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;font-size:14px;color:var(--soft);margin-bottom:22px}
+  .spacer{flex:1}
+
+  .top{display:flex;justify-content:space-between;align-items:center}
+  .dots{display:flex;gap:5px}
+  .dots i{width:18px;height:5px;border-radius:3px;background:var(--line)}
+  .dots i.done{background:var(--ink)} .dots i.cur{background:var(--amor)}
+  .sitText{font-size:36px;line-height:1.05;font-weight:600;letter-spacing:-.01em;margin:28px 0 10px}
+  .ask{font-size:17px;color:var(--soft);margin-bottom:22px}
+  .ask b{color:var(--ink)}
+  .opts{display:grid;gap:14px;flex:1;grid-template-rows:1fr 1fr;max-height:420px}
+  .opt{border-radius:22px;padding:20px 22px;text-align:left;display:flex;flex-direction:column;justify-content:center;transition:transform .12s, box-shadow .2s;border:3px solid transparent}
+  .opt:active{transform:scale(.98)}
+  .opt.miedo{background:var(--miedo-bg);color:var(--miedo)}
+  .opt.amor{background:var(--amor-bg);color:var(--amor)}
+  .opt.sel{border-color:currentColor;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .opt b{font-family:"Fraunces",serif;font-size:38px;font-weight:800;line-height:1}
+  .opt small{color:var(--ink);opacity:.7;font-size:15px;margin-top:6px;line-height:1.35}
+  .nav{display:flex;justify-content:space-between;margin-top:18px}
+
+  .thanks h2{font-size:46px;line-height:.95;font-weight:800;margin:20px 0 14px}
+  .verse{font-family:"Fraunces",serif;font-size:28px;line-height:1.1;font-weight:600;margin:28px 0 8px}
+  .verse em{color:var(--amor);font-style:italic;font-weight:400}
+  .ref{font-weight:700;color:var(--soft)}
+  .alarm{margin-top:28px;background:var(--ink);color:var(--paper);border-radius:18px;padding:16px 18px;font-size:15px;line-height:1.45}
+  .alarm b{color:var(--amor-bg)}
+  .err{color:var(--amor);font-weight:600;margin-top:12px;min-height:1.2em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section class="view on" id="vInicio">
+    <span class="kicker">Noche de hogar · Instituto</span>
+    <h1 class="serif">¿Por qué<br><em>lo hago?</em></h1>
+    <p class="lead">Verás <b><span id="nSit">8</span> situaciones</b>. En cada una, piensa con honestidad: cuando lo haces, ¿te mueve más el <b style="color:var(--miedo)">miedo</b> o el <b style="color:var(--amor)">amor</b>?</p>
+    <div class="steps">
+      <div><span>1</span>No hay respuestas buenas ni malas.</div>
+      <div><span>2</span>Contesta lo que es verdad para ti hoy.</div>
+      <div><span>3</span>Al final, envía tus respuestas.</div>
+    </div>
+    <div class="anon">🔒 Es anónimo: no pedimos tu nombre ni guardamos datos tuyos.</div>
+    <div class="spacer"></div>
+    <button class="btn solid" id="go">Empezar</button>
+  </section>
+
+  <section class="view" id="vSit">
+    <div class="top">
+      <span class="kicker" id="num">1 de 8</span>
+      <div class="dots" id="dots"></div>
+    </div>
+    <h2 class="sitText serif" id="sitText"></h2>
+    <p class="ask">Cuando lo haces… <b>¿qué te mueve más?</b></p>
+    <div class="opts">
+      <button class="opt miedo" data-v="miedo"><b>Miedo</b><small>Culpa, obligación, el «qué dirán», que no me regañen.</small></button>
+      <button class="opt amor" data-v="amor"><b>Amor</b><small>Porque quiero, porque lo amo, porque Él me amó primero.</small></button>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" id="back">← Atrás</button>
+      <button class="btn solid" id="send" style="display:none">Enviar</button>
+    </div>
+    <p class="err" id="err"></p>
+  </section>
+
+  <section class="view thanks" id="vGracias">
+    <span class="kicker">Listo</span>
+    <h2 class="serif">¡Gracias por<br>ser honesto!</h2>
+    <p class="lead">Tu voto ya está en el termómetro del grupo. Espera a que se muestren los resultados.</p>
+    <p class="verse">«Nosotros le amamos a él, <em>porque él nos amó primero</em>».</p>
+    <span class="ref">1 Juan 4:19</span>
+    <div class="alarm">⏰ Antes de irte, pon una alarma diaria en tu celular con este nombre: <b>«¿Lo hago por amor?»</b></div>
+  </section>
+
+</div>
+<script src="config.js"></script>
+<script>
+const S = NH.situaciones, N = S.length;
+const $ = id => document.getElementById(id);
+const flagKey = "nh_voto_" + NH.ronda;
+const ls = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}} };
+let answers = new Array(N).fill(null), i = 0, sending = false;
+
+function show(id){ document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on", v.id===id)); window.scrollTo(0,0); }
+function uuid(){
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16)); b[6]=(b[6]&15)|64; b[8]=(b[8]&63)|128;
+  const h=[...b].map(x=>x.toString(16).padStart(2,"0")).join("");
+  return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`;
+}
+function render(){
+  $("num").textContent = `${i+1} de ${N}`;
+  $("dots").innerHTML = S.map((_,k)=>`<i class="${k<i?'done':k===i?'cur':''}"></i>`).join("");
+  $("sitText").textContent = S[i];
+  document.querySelectorAll(".opt").forEach(b=>b.classList.toggle("sel", answers[i]===b.dataset.v));
+  $("back").style.visibility = i===0 ? "hidden" : "visible";
+  const last = i===N-1;
+  $("send").style.display = last && answers[i] ? "inline-block" : "none";
+}
+document.querySelectorAll(".opt").forEach(b=>b.addEventListener("click", ()=>{
+  answers[i] = b.dataset.v; render();
+  if (i < N-1) setTimeout(()=>{ i++; render(); }, 260);
+}));
+$("back").onclick = ()=>{ if(i>0){ i--; render(); } };
+$("go").onclick = ()=>{ i=0; render(); show("vSit"); };
+$("nSit").textContent = N;
+
+$("send").onclick = async ()=>{
+  if (sending || answers.some(a=>!a)) return;
+  sending = true; $("send").disabled = true; $("send").textContent = "Enviando…"; $("err").textContent = "";
+  const votante = uuid();
+  const rows = answers.map((e,k)=>({ ronda: NH.ronda, votante, situacion: k, eleccion: e }));
+  try{
+    const r = await fetch(NH.url + "/rest/v1/nh_votos", {
+      method:"POST",
+      headers:{ "apikey": NH.key, "Content-Type":"application/json", "Prefer":"return=minimal" },
+      body: JSON.stringify(rows)
+    });
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    ls.set(flagKey, "1");
+    show("vGracias");
+  }catch(e){
+    $("err").textContent = "No se pudo enviar. Revisa tu internet y vuelve a intentar.";
+    $("send").disabled = false; $("send").textContent = "Enviar";
+  }finally{ sending = false; }
+};
+
+if (ls.get(flagKey) === "1") show("vGracias");
+</script>
+</body>
+</html>
