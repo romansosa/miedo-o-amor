@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   .wrap{min-height:100dvh;display:flex;flex-direction:column;padding:calc(22px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));max-width:560px;margin:0 auto}
   .view{display:none;flex:1;flex-direction:column}
@@ -61,6 +62,9 @@
   .how{margin-top:22px;background:#fbf8f2;border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;font-size:14.5px;line-height:1.5;color:var(--soft)}
   .how b{color:var(--ink)}
   .how .date{display:block;font-family:"Fraunces",serif;font-size:20px;font-weight:800;color:var(--amor);margin:4px 0 8px}
+  .help{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--line);text-decoration:none;color:var(--ink);font-size:16px}
+  #qrHelp{background:#fff;padding:8px;border-radius:12px}
+  #qrHelp img,#qrHelp canvas{width:120px!important;height:120px!important;display:block}
   .actions{display:flex;flex-direction:column;gap:10px;margin-top:20px}
   .note{font-size:13px;color:var(--soft);margin-top:12px;text-align:center}
 </style>
@@ -131,6 +135,7 @@
       <b>Gmail:</b> toca los tres puntos ⋮ arriba (en computadora, la flecha junto a «Enviar») → <b>Programar envío</b> → elige la fecha.<br>
       <b>Mail de iPhone:</b> mantén presionada la flecha azul de enviar → <b>Enviar más tarde</b>.<br>
       <b>Outlook:</b> en el menú de enviar → <b>Programar envío</b>.
+      <a class="help" id="helpLink" href="ayuda.html"><span id="qrHelp"></span><b>¿Necesitas ayuda?</b></a>
     </div>
 
     <div class="actions">
@@ -196,6 +201,9 @@ $("send").onclick = async ()=>{
 };
 
 // ---- Carta al yo del futuro ----
+const helpUrl = location.href.split(/[?#]/)[0].replace(/[^/]*$/, "") + "ayuda.html" + (NH.ronda !== "principal" ? "?ronda=" + encodeURIComponent(NH.ronda) : "");
+$("helpLink").href = helpUrl;
+try{ new QRCode($("qrHelp"), { text: helpUrl, width: 240, height: 240, colorDark:"#1e222c", colorLight:"#ffffff", correctLevel: QRCode.CorrectLevel.M }); }catch(e){ $("qrHelp").style.display = "none"; }
 const fut = new Date(); fut.setMonth(fut.getMonth() + 1);
 const hoyTxt = new Date().toLocaleDateString("es-MX", { day:"numeric", month:"long", year:"numeric" });
 const futTxt = fut.toLocaleDateString("es-MX", { weekday:"long", day:"numeric", month:"long" });

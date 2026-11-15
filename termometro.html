@@ -15,7 +15,7 @@
   .tools{position:fixed;top:3vh;right:3vw;display:flex;gap:8px;z-index:5;flex-wrap:nowrap;white-space:nowrap}
   .icon{height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);color:var(--soft);font-size:14px;font-weight:700;background:var(--paper)}
   .icon:hover{border-color:var(--ink);color:var(--ink)}
-  .icon.live{background:var(--amor);border-color:var(--amor);color:#fff}
+  .icon.onair{background:var(--amor);border-color:var(--amor);color:#fff}
   #cartaBtn{border-color:var(--ink);color:var(--ink)}
 
   /* Votación abierta */
@@ -69,13 +69,14 @@
   #carta .cl{flex:1}
   #carta h1{font-size:clamp(44px,min(7vw,12vh),120px);line-height:.92;font-weight:800;letter-spacing:-.02em;margin:.25em 0 .3em}
   #carta h1 em{font-style:italic;font-weight:400;color:var(--amor)}
-  .cq{flex:1.1;list-style:none;display:flex;flex-direction:column;gap:3.2vh;padding-right:110px}
+  .cq{flex:1.1;list-style:none;display:flex;flex-direction:column;gap:3.2vh;padding-right:min(17vw,27vh)}
   .cq li{font-size:clamp(17px,2vw,30px);line-height:1.25;font-weight:600;display:flex;gap:.6em}
   .cq li b{font-family:"Fraunces",serif;color:var(--amor);font-size:1.3em;line-height:1}
   .cq li.verse{font-family:"Fraunces",serif;font-weight:600;color:var(--soft);display:block;border-top:2px solid var(--line);padding-top:2.5vh}
   .cq li.verse em{color:var(--amor)}
   .cq li.verse span{display:block;font-family:"Source Sans 3",sans-serif;font-size:.6em;font-weight:700;margin-top:.4em}
-  #qr3 img,#qr3 canvas{width:84px!important;height:84px!important;display:block;margin-bottom:4px}
+  .helpqr{position:fixed;right:3vw;bottom:3vh;background:#fff;padding:12px 12px 10px;border-radius:16px;box-shadow:0 6px 20px rgba(30,34,44,.1);text-align:center;font-size:clamp(13px,1.2vw,17px);color:var(--ink)}
+  #qr3 img,#qr3 canvas{width:min(15vw,24vh)!important;height:min(15vw,24vh)!important;display:block;margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -133,7 +134,7 @@
     <li><b>3</b>¿Qué quieres que tu yo del futuro recuerde de esta noche?</li>
     <li class="verse">«Nosotros le amamos a él, <em>porque él nos amó primero</em>». <span>1 Juan 4:19</span></li>
   </ol>
-  <div class="miniqr"><div id="qr3"></div>¿No te apareció?</div>
+  <div class="helpqr"><div id="qr3"></div><b>¿Necesitas ayuda?</b></div>
 </section>
 <p class="status" id="status"></p>
 
@@ -145,11 +146,12 @@ const base = location.href.split(/[?#]/)[0].replace(/[^/]*$/, "");
 const voteUrl = base + (NH.ronda !== "principal" ? "?ronda=" + encodeURIComponent(NH.ronda) : "");
 $("url").textContent = voteUrl.replace(/^https?:\/\//, "");
 
-function makeQR(el, size){
-  try{ new QRCode(el, { text: voteUrl, width: size, height: size, colorDark: "#1e222c", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M }); }
+const helpUrl = base + "ayuda.html" + (NH.ronda !== "principal" ? "?ronda=" + encodeURIComponent(NH.ronda) : "");
+function makeQR(el, size, text){
+  try{ new QRCode(el, { text: text || voteUrl, width: size, height: size, colorDark: "#1e222c", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M }); }
   catch(e){ el.textContent = voteUrl; }
 }
-makeQR($("qr"), 600); makeQR($("qr2"), 200); makeQR($("qr3"), 200);
+makeQR($("qr"), 600); makeQR($("qr2"), 200); makeQR($("qr3"), 400, helpUrl);
 
 let mode = "open";
 function setMode(m){
@@ -163,7 +165,7 @@ $("toggle").onclick = ()=> setMode(mode === "thermo" ? "open" : "thermo");
 // ---- Carta al yo del futuro (solo con ?clave=) ----
 const clave = new URLSearchParams(location.search).get("clave");
 let faseActual = "votacion";
-function pintarBtn(){ $("cartaBtn").textContent = faseActual === "carta" ? "↩︎ Cerrar carta" : "✉️ Abrir carta al yo del futuro"; $("cartaBtn").classList.toggle("live", faseActual === "carta"); }
+function pintarBtn(){ $("cartaBtn").textContent = faseActual === "carta" ? "↩︎ Cerrar carta" : "✉️ Abrir carta al yo del futuro"; $("cartaBtn").classList.toggle("onair", faseActual === "carta"); }
 async function rpc(fn, body){
   const r = await fetch(NH.url + "/rest/v1/rpc/" + fn, { method:"POST", headers:{ "apikey": NH.key, "Content-Type":"application/json" }, body: JSON.stringify(body) });
   if (!r.ok) throw new Error(await r.text());
