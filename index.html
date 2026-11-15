@@ -24,9 +24,9 @@
 
   .top{display:flex;justify-content:space-between;align-items:center}
   .dots{display:flex;gap:5px}
-  .dots i{width:18px;height:5px;border-radius:3px;background:var(--line)}
+  .dots i{width:14px;height:5px;border-radius:3px;background:var(--line)}
   .dots i.done{background:var(--ink)} .dots i.cur{background:var(--amor)}
-  .sitText{font-size:36px;line-height:1.05;font-weight:600;letter-spacing:-.01em;margin:28px 0 10px}
+  .sitText{font-size:29px;line-height:1.12;font-weight:600;letter-spacing:-.01em;margin:28px 0 10px}
   .ask{font-size:17px;color:var(--soft);margin-bottom:22px}
   .ask b{color:var(--ink)}
   .opts{display:grid;gap:14px;flex:1;grid-template-rows:1fr 1fr;max-height:420px}
@@ -54,7 +54,7 @@
   <section class="view on" id="vInicio">
     <span class="kicker">Noche de hogar · Instituto</span>
     <h1 class="serif">¿Por qué<br><em>lo hago?</em></h1>
-    <p class="lead">Verás <b><span id="nSit">8</span> situaciones</b>. En cada una, piensa con honestidad: cuando lo haces, ¿te mueve más el <b style="color:var(--miedo)">miedo</b> o el <b style="color:var(--amor)">amor</b>?</p>
+    <p class="lead">Verás <b><span id="nSit">10</span> situaciones</b>. En cada una, piensa con honestidad: cuando lo haces, ¿te mueve más el <b style="color:var(--miedo)">miedo</b> o el <b style="color:var(--amor)">amor</b>?</p>
     <div class="steps">
       <div><span>1</span>No hay respuestas buenas ni malas.</div>
       <div><span>2</span>Contesta lo que es verdad para ti hoy.</div>
@@ -67,11 +67,11 @@
 
   <section class="view" id="vSit">
     <div class="top">
-      <span class="kicker" id="num">1 de 8</span>
+      <span class="kicker" id="num">1 de 10</span>
       <div class="dots" id="dots"></div>
     </div>
     <h2 class="sitText serif" id="sitText"></h2>
-    <p class="ask">Cuando lo haces… <b>¿qué te mueve más?</b></p>
+    <p class="ask">Con honestidad: <b>¿qué te mueve más?</b></p>
     <div class="opts">
       <button class="opt miedo" data-v="miedo"><b>Miedo</b><small>Culpa, obligación, el «qué dirán», que no me regañen.</small></button>
       <button class="opt amor" data-v="amor"><b>Amor</b><small>Porque quiero, porque lo amo, porque Él me amó primero.</small></button>
@@ -111,7 +111,7 @@ function uuid(){
 function render(){
   $("num").textContent = `${i+1} de ${N}`;
   $("dots").innerHTML = S.map((_,k)=>`<i class="${k<i?'done':k===i?'cur':''}"></i>`).join("");
-  $("sitText").textContent = S[i];
+  $("sitText").textContent = S[i].texto;
   document.querySelectorAll(".opt").forEach(b=>b.classList.toggle("sel", answers[i]===b.dataset.v));
   $("back").style.visibility = i===0 ? "hidden" : "visible";
   const last = i===N-1;

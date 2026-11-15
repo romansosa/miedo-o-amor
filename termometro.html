@@ -172,12 +172,12 @@ function paint(d){
 
   let hi = -1, hr = -1;
   by.forEach((v,k)=>{ const t=v.m+v.a; if(t && v.m){ const r=v.m/t; if(r>hr || (r===hr && v.m>by[hi].m)){ hr=r; hi=k; } } });
-  $("heavy").innerHTML = hi >= 0 ? `Donde más pesa el miedo:<br><b>${S[hi]}</b>` : "";
+  $("heavy").innerHTML = hi >= 0 ? `Donde más pesa el miedo:<br><b>${S[hi].corto}</b>` : "";
   $("heavy").style.display = hi >= 0 ? "block" : "none";
 
   $("list").innerHTML = S.map((s,k)=>{
     const v = by[k], t = v.m + v.a;
-    return `<div class="item"><div class="t"><span>${s}</span><small><span style="color:var(--miedo)">${v.m}</span> · <span style="color:var(--amor)">${v.a}</span></small></div>
+    return `<div class="item"><div class="t"><span>${s.corto}</span><small><span style="color:var(--miedo)">${v.m}</span> · <span style="color:var(--amor)">${v.a}</span></small></div>
       <div class="bar"><span style="width:${t?v.m/t*100:0}%;background:var(--miedo)"></span><span style="width:${t?v.a/t*100:0}%;background:var(--amor)"></span></div></div>`;
   }).join("");
 }
