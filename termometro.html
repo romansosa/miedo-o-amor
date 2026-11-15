@@ -12,9 +12,11 @@
   body{overflow:hidden}
   .screen{position:fixed;inset:0;display:none;padding:4.5vh 5vw}
   .screen.on{display:flex}
-  .tools{position:fixed;top:3vh;right:3vw;display:flex;gap:8px;z-index:5}
+  .tools{position:fixed;top:3vh;right:3vw;display:flex;gap:8px;z-index:5;flex-wrap:nowrap;white-space:nowrap}
   .icon{height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);color:var(--soft);font-size:14px;font-weight:700;background:var(--paper)}
   .icon:hover{border-color:var(--ink);color:var(--ink)}
+  .icon.live{background:var(--amor);border-color:var(--amor);color:#fff}
+  #cartaBtn{border-color:var(--ink);color:var(--ink)}
 
   /* Votación abierta */
   #open{align-items:center;gap:6vw}
@@ -63,11 +65,23 @@
   .miniqr{position:fixed;right:3vw;bottom:3vh;background:#fff;padding:8px;border-radius:12px;box-shadow:0 6px 20px rgba(30,34,44,.08);text-align:center;font-size:11px;font-weight:700;color:var(--soft)}
   #qr2 img,#qr2 canvas{width:84px!important;height:84px!important;display:block;margin-bottom:4px}
   .status{position:fixed;left:5vw;bottom:2.5vh;font-size:12px;color:var(--soft)}
+  #carta{align-items:center;gap:5vw}
+  #carta .cl{flex:1}
+  #carta h1{font-size:clamp(44px,min(7vw,12vh),120px);line-height:.92;font-weight:800;letter-spacing:-.02em;margin:.25em 0 .3em}
+  #carta h1 em{font-style:italic;font-weight:400;color:var(--amor)}
+  .cq{flex:1.1;list-style:none;display:flex;flex-direction:column;gap:3.2vh;padding-right:110px}
+  .cq li{font-size:clamp(17px,2vw,30px);line-height:1.25;font-weight:600;display:flex;gap:.6em}
+  .cq li b{font-family:"Fraunces",serif;color:var(--amor);font-size:1.3em;line-height:1}
+  .cq li.verse{font-family:"Fraunces",serif;font-weight:600;color:var(--soft);display:block;border-top:2px solid var(--line);padding-top:2.5vh}
+  .cq li.verse em{color:var(--amor)}
+  .cq li.verse span{display:block;font-family:"Source Sans 3",sans-serif;font-size:.6em;font-weight:700;margin-top:.4em}
+  #qr3 img,#qr3 canvas{width:84px!important;height:84px!important;display:block;margin-bottom:4px}
 </style>
 </head>
 <body>
 <div class="tools">
   <button class="icon" id="toggle">Mostrar termómetro</button>
+  <button class="icon" id="cartaBtn" style="display:none">✉️ Abrir carta</button>
   <button class="icon" id="fs">⤢</button>
 </div>
 
@@ -107,6 +121,20 @@
   </div>
   <div class="miniqr"><div id="qr2"></div>¿Faltas tú?</div>
 </section>
+<section class="screen" id="carta">
+  <div class="cl">
+    <span class="kicker">Última actividad · en sus celulares</span>
+    <h1 class="serif">Carta a tu<br><em>yo del futuro</em></h1>
+    <p class="scan">Escríbete un correo que te llegue <b>en un mes</b> y prográmalo antes de enviarlo.</p>
+  </div>
+  <ol class="cq">
+    <li><b>1</b>¿En qué situación de hoy te diste cuenta de que te mueve más el miedo que el amor?</li>
+    <li><b>2</b>¿Qué cambio pequeño vas a hacer este mes para hacerlo por amor?</li>
+    <li><b>3</b>¿Qué quieres que tu yo del futuro recuerde de esta noche?</li>
+    <li class="verse">«Nosotros le amamos a él, <em>porque él nos amó primero</em>». <span>1 Juan 4:19</span></li>
+  </ol>
+  <div class="miniqr"><div id="qr3"></div>¿No te apareció?</div>
+</section>
 <p class="status" id="status"></p>
 
 <script src="config.js"></script>
@@ -121,15 +149,41 @@ function makeQR(el, size){
   try{ new QRCode(el, { text: voteUrl, width: size, height: size, colorDark: "#1e222c", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M }); }
   catch(e){ el.textContent = voteUrl; }
 }
-makeQR($("qr"), 600); makeQR($("qr2"), 200);
+makeQR($("qr"), 600); makeQR($("qr2"), 200); makeQR($("qr3"), 200);
 
 let mode = "open";
-$("toggle").onclick = ()=>{
-  mode = mode === "open" ? "thermo" : "open";
+function setMode(m){
+  mode = m;
   document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on", s.id===mode));
-  $("toggle").textContent = mode === "open" ? "Mostrar termómetro" : "Volver al QR";
+  $("toggle").textContent = mode === "thermo" ? "Volver al QR" : (mode === "carta" ? "Ver termómetro" : "Mostrar termómetro");
   if (mode === "thermo") { $("fill").style.height = "0%"; setTimeout(()=>paint(last, true), 60); }
-};
+}
+$("toggle").onclick = ()=> setMode(mode === "thermo" ? "open" : "thermo");
+
+// ---- Carta al yo del futuro (solo con ?clave=) ----
+const clave = new URLSearchParams(location.search).get("clave");
+let faseActual = "votacion";
+function pintarBtn(){ $("cartaBtn").textContent = faseActual === "carta" ? "↩︎ Cerrar carta" : "✉️ Abrir carta al yo del futuro"; $("cartaBtn").classList.toggle("live", faseActual === "carta"); }
+async function rpc(fn, body){
+  const r = await fetch(NH.url + "/rest/v1/rpc/" + fn, { method:"POST", headers:{ "apikey": NH.key, "Content-Type":"application/json" }, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+if (clave) {
+  $("cartaBtn").style.display = "inline-block";
+  rpc("nh_fase", { p_ronda: NH.ronda }).then(f=>{ faseActual = f; pintarBtn(); if (f === "carta") setMode("carta"); }).catch(()=>{});
+  $("cartaBtn").onclick = async ()=>{
+    const nueva = faseActual === "carta" ? "votacion" : "carta";
+    $("cartaBtn").disabled = true;
+    try{
+      faseActual = await rpc("nh_set_fase", { p_ronda: NH.ronda, p_fase: nueva, p_clave: clave });
+      pintarBtn();
+      setMode(faseActual === "carta" ? "carta" : "thermo");
+      $("status").textContent = "";
+    }catch(e){ $("status").textContent = "No se pudo cambiar la actividad (revisa la clave del link)."; }
+    $("cartaBtn").disabled = false;
+  };
+}
 $("fs").onclick = ()=>{ try{ document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }catch(e){} };
 
 let last = { rows: [], votantes: 0 };

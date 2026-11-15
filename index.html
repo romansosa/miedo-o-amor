@@ -47,6 +47,22 @@
   .alarm{margin-top:28px;background:var(--ink);color:var(--paper);border-radius:18px;padding:16px 18px;font-size:15px;line-height:1.45}
   .alarm b{color:var(--amor-bg)}
   .err{color:var(--amor);font-weight:600;margin-top:12px;min-height:1.2em}
+  .wait{margin-top:22px;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--soft)}
+  .wait i{width:9px;height:9px;border-radius:50%;background:var(--amor);animation:pl 1.4s infinite}
+  @keyframes pl{0%,100%{opacity:.25}50%{opacity:1}}
+  #vCarta h2{font-size:42px;line-height:.95;font-weight:800;margin:16px 0 12px}
+  #vCarta h2 em{font-style:italic;font-weight:400;color:var(--amor)}
+  .q{margin-top:20px}
+  .q label{display:block;font-weight:700;font-size:16px;line-height:1.35;margin-bottom:8px}
+  .q label span{font-family:"Fraunces",serif;color:var(--amor);margin-right:6px}
+  .q textarea,.q input{width:100%;border:2px solid var(--line);border-radius:14px;background:#fbf8f2;padding:12px 14px;font:inherit;font-size:16px;line-height:1.45;color:var(--ink);resize:vertical}
+  .q textarea{min-height:92px}
+  .q textarea:focus,.q input:focus{outline:none;border-color:var(--ink)}
+  .how{margin-top:22px;background:#fbf8f2;border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;font-size:14.5px;line-height:1.5;color:var(--soft)}
+  .how b{color:var(--ink)}
+  .how .date{display:block;font-family:"Fraunces",serif;font-size:20px;font-weight:800;color:var(--amor);margin:4px 0 8px}
+  .actions{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+  .note{font-size:13px;color:var(--soft);margin-top:12px;text-align:center}
 </style>
 </head>
 <body>
@@ -92,6 +108,37 @@
     <p class="verse">«Nosotros le amamos a él, <em>porque él nos amó primero</em>».</p>
     <span class="ref">1 Juan 4:19</span>
     <div class="alarm">⏰ Antes de irte, pon una alarma diaria en tu celular con este nombre: <b>«¿Lo hago por amor?»</b></div>
+    <div class="wait"><i></i>Deja esta página abierta: en un momento sigue otra actividad.</div>
+  </section>
+
+  <section class="view" id="vCarta">
+    <span class="kicker">Última actividad</span>
+    <h2 class="serif">Carta a tu<br><em>yo del futuro</em></h2>
+    <p class="lead">Escríbete un correo que te llegue <b>dentro de un mes</b>. Lo que escribas se queda en tu celular: esta página no lo guarda ni lo ve nadie más.</p>
+
+    <div class="q"><label for="c1"><span>1</span>¿En qué situación de hoy te diste cuenta de que te mueve más el miedo que el amor?</label>
+      <textarea id="c1" placeholder="Siendo honesto, me di cuenta de que…"></textarea></div>
+    <div class="q"><label for="c2"><span>2</span>¿Qué cambio pequeño vas a hacer este mes para hacerlo por amor?</label>
+      <textarea id="c2" placeholder="Voy a…"></textarea></div>
+    <div class="q"><label for="c3"><span>3</span>¿Qué quieres que tu yo del futuro recuerde de esta noche?</label>
+      <textarea id="c3" placeholder="Acuérdate de que…"></textarea></div>
+    <div class="q"><label for="cMail">Tu correo (solo para que te llegue a ti)</label>
+      <input id="cMail" type="email" inputmode="email" autocomplete="email" placeholder="tucorreo@gmail.com"></div>
+
+    <div class="how">
+      <b>Antes de enviarlo, prográmalo</b> para esta fecha:
+      <span class="date" id="cDate"></span>
+      <b>Gmail:</b> toca los tres puntos ⋮ arriba (en computadora, la flecha junto a «Enviar») → <b>Programar envío</b> → elige la fecha.<br>
+      <b>Mail de iPhone:</b> mantén presionada la flecha azul de enviar → <b>Enviar más tarde</b>.<br>
+      <b>Outlook:</b> en el menú de enviar → <b>Programar envío</b>.
+    </div>
+
+    <div class="actions">
+      <button class="btn solid" id="cOpen">Abrir en mi correo ✉️</button>
+      <button class="btn ghost" id="cCopy">Copiar mi carta</button>
+    </div>
+    <p class="err" id="cErr"></p>
+    <p class="note">Si tu app de correo no se abre, copia la carta y pégala en un correo nuevo para ti.</p>
   </section>
 
 </div>
@@ -103,7 +150,7 @@ const flagKey = "nh_voto_" + NH.ronda;
 const ls = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}} };
 let answers = new Array(N).fill(null), i = 0, sending = false;
 
-function show(id){ document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on", v.id===id)); window.scrollTo(0,0); }
+var show = function(id){ document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on", v.id===id)); window.scrollTo(0,0); };
 function uuid(){
   if (crypto.randomUUID) return crypto.randomUUID();
   const b = crypto.getRandomValues(new Uint8Array(16)); b[6]=(b[6]&15)|64; b[8]=(b[8]&63)|128;
@@ -147,6 +194,64 @@ $("send").onclick = async ()=>{
     $("send").disabled = false; $("send").textContent = "Enviar";
   }finally{ sending = false; }
 };
+
+// ---- Carta al yo del futuro ----
+const fut = new Date(); fut.setMonth(fut.getMonth() + 1);
+const hoyTxt = new Date().toLocaleDateString("es-MX", { day:"numeric", month:"long", year:"numeric" });
+const futTxt = fut.toLocaleDateString("es-MX", { weekday:"long", day:"numeric", month:"long" });
+$("cDate").textContent = futTxt.charAt(0).toUpperCase() + futTxt.slice(1);
+["c1","c2","c3","cMail"].forEach(id=>{
+  const el = $(id); el.value = ls.get("nh_carta_"+id) || "";
+  el.addEventListener("input", ()=>ls.set("nh_carta_"+id, el.value));
+});
+function carta(){
+  const a = $("c1").value.trim(), b = $("c2").value.trim(), c = $("c3").value.trim();
+  return `Querido yo del futuro:
+
+Hoy, ${hoyTxt}, en la noche de hogar del instituto, me pregunté por qué hago lo que hago: ¿por miedo o por amor?
+
+Siendo honesto, me di cuenta de esto:
+${a || "…"}
+
+El cambio que decidí hacer este mes para hacerlo por amor:
+${b || "…"}
+
+Lo que quiero que recuerdes de esta noche:
+${c || "…"}
+
+¿Cómo te fue? ¿Lo estás haciendo por amor?
+
+«Nosotros le amamos a él, porque él nos amó primero» (1 Juan 4:19).
+
+Con cariño,
+Tú, hace un mes`;
+}
+$("cOpen").onclick = ()=>{
+  $("cErr").textContent = "";
+  if (!$("c1").value.trim() && !$("c2").value.trim() && !$("c3").value.trim()) { $("cErr").textContent = "Escribe al menos una respuesta antes de abrir el correo."; return; }
+  const to = $("cMail").value.trim();
+  const url = "mailto:" + encodeURIComponent(to) + "?subject=" + encodeURIComponent("Carta de mi yo del pasado ✉️ ¿Lo estoy haciendo por amor?") + "&body=" + encodeURIComponent(carta());
+  location.href = url;
+};
+$("cCopy").onclick = async ()=>{
+  try{ await navigator.clipboard.writeText(carta()); $("cCopy").textContent = "¡Copiada! ✓"; }
+  catch(e){ $("cErr").textContent = "No se pudo copiar automáticamente; mantén presionado el texto para copiarlo."; }
+  setTimeout(()=>{ $("cCopy").textContent = "Copiar mi carta"; }, 2500);
+};
+
+// ---- Escuchar cuando el presentador abre la carta ----
+let fase = "votacion";
+async function checkFase(){
+  try{
+    const r = await fetch(NH.url + "/rest/v1/rpc/nh_fase", { method:"POST", headers:{ "apikey": NH.key, "Content-Type":"application/json" }, body: JSON.stringify({ p_ronda: NH.ronda }) });
+    if (!r.ok) return;
+    fase = await r.json();
+    if (fase === "carta" && $("vGracias").classList.contains("on")) show("vCarta");
+  }catch(e){}
+}
+const _show = show;
+show = function(id){ _show(id); if (id === "vGracias" && fase === "carta") _show("vCarta"); };
+checkFase(); setInterval(checkFase, 3000);
 
 if (ls.get(flagKey) === "1") show("vGracias");
 </script>
